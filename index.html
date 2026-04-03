@@ -1,164 +1,141 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🕵️‍♂️ شبكة الجرائم - مطورة</title>
-  <style>
-    :root { --gold: #ffcc00; --bg: #0d0d0d; --card: #1a1a1a; --danger: #ff4d4d; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; background: var(--bg); color: white; text-align: center; margin: 0; padding: 20px; }
-    .container { max-width: 500px; margin: auto; background: var(--card); border: 1px solid #333; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    h1 { color: var(--gold); text-shadow: 0 0 10px rgba(255, 204, 0, 0.3); }
-    input, select, button { width: 90%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; transition: 0.3s; }
-    input { background: #222; color: white; border: 1px solid #444; }
-    button { background: var(--gold); color: black; font-weight: bold; cursor: pointer; }
-    button:hover { transform: scale(1.02); background: #e6b800; }
-    .danger { background: var(--danger); color: white; }
-    .hidden { display: none; }
-    .player-tag { background: #333; display: inline-block; padding: 5px 12px; margin: 5px; border-radius: 20px; border: 1px solid var(--gold); font-size: 14px; }
-    #timer { font-size: 24px; color: var(--danger); font-weight: bold; margin: 10px; }
-    .role-reveal { font-size: 22px; color: #00ffcc; margin: 20px 0; min-height: 30px; }
-    .clue-box { background: #2d1a00; border: 1px dashed var(--gold); padding: 10px; border-radius: 10px; font-style: italic; margin-top: 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🕵️‍♂️ شبكة الجرائم - الهوية المزيفة</title>
+    <style>
+        :root { --gold: #ffd700; --red: #ff4757; --bg: #0a0a0b; --card: #16213e; }
+        body { font-family: 'Segoe UI', sans-serif; direction: rtl; background: var(--bg); color: white; margin: 0; padding: 10px; }
+        .container { max-width: 450px; margin: 20px auto; background: var(--card); border-radius: 25px; padding: 25px; border: 2px solid #1f4068; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        h1 { color: var(--gold); text-align: center; }
+        button { width: 100%; padding: 15px; margin: 10px 0; border-radius: 15px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .main-btn { background: linear-gradient(45deg, #ffd700, #ffa500); color: black; }
+        .danger-btn { background: #ff4757; color: white; }
+        .hidden { display: none; }
+        input { width: 100%; padding: 12px; border-radius: 10px; background: #1a1a2e; color: white; border: 1px solid #0f3460; box-sizing: border-box; }
+        .role-box { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 15px; margin: 20px 0; border-right: 5px solid var(--gold); }
+        .tag { background: #0f3460; padding: 5px 12px; border-radius: 20px; font-size: 12px; margin: 3px; display: inline-block; border: 1px solid var(--gold); }
+    </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>🕵️‍♂️ شبكة الجرائم</h1>
+    <div id="setup">
+        <h1>🕵️‍♂️ كشف الخائن</h1>
+        <input type="text" id="pInput" placeholder="اسم اللاعب...">
+        <button class="main-btn" onclick="addP()">➕ أضف لاعب</button>
+        <div id="pList" style="margin: 15px 0;"></div>
+        <button class="main-btn" style="background: white;" onclick="startGame()">🚀 ابدأ المهمة</button>
+    </div>
 
-  <div id="setup">
-    <p>سجل أسماء المحققين (5 - 12 لاعب)</p>
-    <input type="text" id="pName" placeholder="اسم اللاعب...">
-    <button onclick="addP()">➕ إضافة لاعب</button>
-    <div id="pList" style="margin: 15px 0;"></div>
-    <select id="impQty">
-      <option value="1">1 أمبوستر (خائن)</option>
-      <option value="2">2 أمبوستر</option>
-    </select>
-    <button onclick="start()">🚀 ابدأ المهمة</button>
-  </div>
+    <div id="roleScreen" class="hidden">
+        <h2 id="turnName" style="color: var(--gold);"></h2>
+        <div class="role-box">
+            <p id="mainRole" style="font-size: 20px;">****</p>
+            <p id="secretInfo" style="color: #00ffcc; font-size: 14px; margin-top: 10px;"></p>
+        </div>
+        <button onmousedown="showR()" onmouseup="hideR()" ontouchstart="showR()" ontouchend="hideR()" class="main-btn">اضغط مطولاً لرؤية الهوية 👁️</button>
+        <button onclick="nextStep()" style="background: #333; color: white;">اللاعب التالي ➡️</button>
+    </div>
 
-  <div id="roles" class="hidden">
-    <h3>🎭 استلام المهام</h3>
-    <p id="turnName" style="font-size: 20px; color: var(--gold);"></p>
-    <div class="role-reveal" id="roleDisplay">****</div>
-    <div id="clueDisplay" class="clue-box hidden"></div>
-    
-    <button onmousedown="showR()" onmouseup="hideR()" ontouchstart="showR()" ontouchend="hideR()">اضغط مطولاً لرؤية دورك 👁️</button>
-    <button onclick="nextP()" id="nextBtn">اللاعب التالي ➡️</button>
-  </div>
+    <div id="gameScreen" class="hidden">
+        <h2 id="cTitle" style="color: var(--gold);"></h2>
+        <p id="cDesc"></p>
+        <hr border="0.5" color="#333">
+        <p style="color: var(--red); font-weight: bold;">⚠️ سؤال التحقيق:</p>
+        <p id="qText" style="font-size: 18px;"></p>
+        <button class="main-btn" onclick="newQ()">❓ سؤال آخر</button>
+        <button class="danger-btn" onclick="goVote()">🚨 كشف الخائن (تصويت)</button>
+    </div>
 
-  <div id="crimeScene" class="hidden">
-    <h2 id="cTitle"></h2>
-    <p id="cDesc" style="line-height: 1.6; color: #ccc;"></p>
-    <div id="timer">01:00</div>
-    <p id="qText" style="font-weight: bold; color: var(--gold);"></p>
-    <button onclick="nextQ()">السؤال التالي ❓</button>
-    <button class="danger" onclick="goVote()">انتقل للتصويت 🗳️</button>
-  </div>
-
-  <div id="voting" class="hidden">
-    <h2>🗳️ تصويت الطرد</h2>
-    <p>تشاوروا جيداً.. من يبدو مريباً؟</p>
-    <select id="voteList"></select>
-    <button class="danger" onclick="kick()">إقصاء اللاعب 🚪</button>
-    <div id="result" style="margin-top:20px; font-weight:bold;"></div>
-  </div>
-
-  <div id="end" class="hidden">
-    <h2 id="winMsg"></h2>
-    <button onclick="location.reload()">لعبة جديدة 🔁</button>
-  </div>
+    <div id="voteScreen" class="hidden">
+        <h2>🗳️ من تعتقد أنه الخائن؟</h2>
+        <select id="voteSelect" style="width: 100%; padding: 15px; border-radius: 10px; margin-bottom: 20px;"></select>
+        <button class="danger-btn" onclick="kick()">طرد نهائي 🚪</button>
+        <div id="vMsg" style="color: var(--gold); margin-top: 20px; font-weight: bold;"></div>
+        <button onclick="location.reload()" style="background: #444; color: white;">إعادة اللعبة 🔁</button>
+    </div>
 </div>
 
 <script>
-  let players = [], alive = [], roles = {}, imps = [], clues = {}, idx = 0;
-  const jobs = ["طبيب شرعي", "خبير بصمات", "ضابط عمليات", "صحفي استقصائي", "حارس ليلي", "تقني حاسوب"];
-  const cases = [
-    {t: "سرقة الماس الملكي 💎", d: "اختفت الجوهرة من المتحف في ظلام دامس، ووجدنا قفازاً أسود عند النافذة.", q: ["أين كنت وقت انقطاع الكهرباء؟", "هل رأيت أحداً يرتدي قفازات؟"]},
-    {t: "تسمم العشاء الأخير 🧪", d: "سقط الملياردير بعد شرب العصير. الشيف يختفي عن الأنظار الآن.", q: ["ماذا كان بجانب طبقك؟", "هل لاحظت رائحة غريبة في القاعة؟"]}
-  ];
-  const generalClues = ["رأيت ظلاً طويلاً يهرب", "سمعت صوت زجاج يتكسر", "شممت رائحة عطر قوية", "وجدت مفتاحاً ملقى على الأرض"];
-
-  function addP() {
-    let n = document.getElementById("pName").value.trim();
-    if(n && !players.includes(n)) {
-      players.push(n); document.getElementById("pName").value = "";
-      document.getElementById("pList").innerHTML += `<span class="player-tag">${n}</span>`;
-    }
-  }
-
-  function start() {
-    if(players.length < 5) return alert("العدد قليل!");
-    alive = [...players];
-    let count = parseInt(document.getElementById("impQty").value);
-    imps = players.sort(() => .5 - Math.random()).slice(0, count);
+    let players = [], alive = [], roles = {}, fakeJobs = {}, imps = [], idx = 0;
     
-    players.forEach(p => {
-      if(imps.includes(p)) {
-        roles[p] = "أنت الأمبوستر 😈 (حاول تضليلهم!)";
-      } else {
-        roles[p] = "أنت محقق: " + jobs[Math.floor(Math.random()*jobs.length)] + " 🔍";
-        if(Math.random() > 0.5) clues[p] = "خيط رفيع: " + generalClues[Math.floor(Math.random()*generalClues.length)];
-      }
-    });
+    const jobs = [
+        {name: "دكتور شرعي 🩺", info: "كنت في المشرحة أفحص جثة قديمة."},
+        {name: "كهربائي المدينة ⚡", info: "كنت أصلح لوحة المفاتيح الرئيسية."},
+        {name: "حارس ليلي 🔦", info: "كنت أقوم بدورية حول السور الخلفي."},
+        {name: "طباخ القصر 👨‍🍳", info: "كنت أجهز وجبة العشاء في المطبخ."},
+        {name: "محامي العائلة ⚖️", info: "كنت أراجع الوصية في المكتبة."}
+    ];
 
-    showSection("roles"); updateTurn();
-  }
+    const questions = [
+        "ماذا كنت تفعل بالضبط في وظيفتك وقت وقوع الحادث؟",
+        "هل هناك شاهد رأى قيامك بعملك في ذلك الوقت؟",
+        "إذا كنت في وظيفتك، لماذا وجدت بصماتك في مكان مريب؟",
+        "صف لي الأداة التي كنت تستخدمها في عملك الآن!"
+    ];
 
-  function showR() { 
-    document.getElementById("roleDisplay").innerText = roles[players[idx]];
-    if(clues[players[idx]]) {
-      let c = document.getElementById("clueDisplay");
-      c.innerText = clues[players[idx]]; c.classList.remove("hidden");
+    function addP() {
+        let n = document.getElementById('pInput').value.trim();
+        if(n && !players.includes(n)) {
+            players.push(n); document.getElementById('pInput').value = '';
+            document.getElementById('pList').innerHTML += `<span class="tag">${n}</span>`;
+        }
     }
-  }
-  function hideR() { 
-    document.getElementById("roleDisplay").innerText = "****";
-    document.getElementById("clueDisplay").classList.add("hidden");
-  }
 
-  function nextP() {
-    if(++idx < players.length) updateTurn();
-    else {
-      showSection("crimeScene");
-      let c = cases[Math.floor(Math.random()*cases.length)];
-      document.getElementById("cTitle").innerText = c.t;
-      document.getElementById("cDesc").innerText = c.d;
-      startTimer();
+    function startGame() {
+        if(players.length < 5) return alert("محتاجين 5 لاعبين!");
+        alive = [...players];
+        imps = [...players].sort(() => 0.5 - Math.random()).slice(0, 1); // 1 imposter
+        
+        players.forEach(p => {
+            let job = jobs[Math.floor(Math.random()*jobs.length)];
+            if(imps.includes(p)) {
+                roles[p] = "أنت الإمبوستر (الخائن) 😈";
+                fakeJobs[p] = "وظيفتك المزيفة: " + job.name + " (تظاهر بأنك " + job.info + ")";
+            } else {
+                roles[p] = "أنت بريء - وظيفتك: " + job.name;
+                fakeJobs[p] = "حجتك: " + job.info;
+            }
+        });
+        showDiv('roleScreen'); updateUI();
     }
-  }
 
-  function updateTurn() { document.getElementById("turnName").innerText = "دور اللاعب: " + players[idx]; }
+    function showR() {
+        document.getElementById('mainRole').innerText = roles[players[idx]];
+        document.getElementById('secretInfo').innerText = fakeJobs[players[idx]];
+    }
+    function hideR() {
+        document.getElementById('mainRole').innerText = "****";
+        document.getElementById('secretInfo').innerText = "";
+    }
 
-  function startTimer() {
-    let s = 60;
-    let t = setInterval(() => {
-      document.getElementById("timer").innerText = "00:" + (s < 10 ? "0" : "") + s;
-      if(--s < 0) { clearInterval(t); document.getElementById("timer").innerText = "انتهى الوقت!"; }
-    }, 1000);
-  }
+    function nextStep() {
+        if(++idx < players.length) updateUI();
+        else {
+            showDiv('gameScreen');
+            document.getElementById('cTitle').innerText = "قضية اختفاء ملفات Est2";
+            document.getElementById('cDesc').innerText = "وقعت الجريمة الساعة 9 مساءً في مكتب الكيمياء.";
+            newQ();
+        }
+    }
 
-  function goVote() {
-    showSection("voting");
-    let sel = document.getElementById("voteList"); sel.innerHTML = "";
-    alive.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
-  }
+    function updateUI() { document.getElementById('turnName').innerText = "اللاعب: " + players[idx]; }
+    function newQ() { document.getElementById('qText').innerText = questions[Math.floor(Math.random()*questions.length)]; }
+    function showDiv(id) { document.querySelectorAll('.container > div').forEach(d => d.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
 
-  function kick() {
-    let p = document.getElementById("voteList").value;
-    alive = alive.filter(a => a !== p);
-    let isImp = imps.includes(p);
-    document.getElementById("result").innerHTML = p + (isImp ? " كان هو الخائن! ✅" : " كان بريئاً.. للأسف! ❌");
-    
-    let aliveImps = imps.filter(i => alive.includes(i));
-    if(aliveImps.length == 0) end("الأبرياء انتصروا! 🏆");
-    else if(aliveImps.length >= alive.length - aliveImps.length) end("الأمبوستر سيطر على المدينة! 😈");
-    else setTimeout(goVote, 2000);
-  }
+    function goVote() {
+        showDiv('voteScreen');
+        let s = document.getElementById('voteSelect'); s.innerHTML = "";
+        alive.forEach(p => s.innerHTML += `<option value="${p}">${p}</option>`);
+    }
 
-  function end(m) { showSection("end"); document.getElementById("winMsg").innerText = m; }
-  function showSection(id) { ["setup","roles","crimeScene","voting","end"].forEach(s => document.getElementById(s).classList.add("hidden")); document.getElementById(id).classList.remove("hidden"); }
+    function kick() {
+        let p = document.getElementById('voteSelect').value;
+        let res = imps.includes(p) ? "✅ نعم! كان هو الخائن" : "❌ خطأ! لقد طردتم شخصاً بريئاً";
+        document.getElementById('vMsg').innerText = "النتيجة: " + p + " " + res;
+    }
 </script>
 </body>
 </html>
