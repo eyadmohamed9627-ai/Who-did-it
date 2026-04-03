@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>لعبة القضايا - الامبوستر</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      background: #111;
+      color: white;
+      text-align: center;
+      padding: 15px;
+    }
+    h1,h2 { color: gold; }
+    .box {
+      background: #1c1c1c;
+      border: 2px solid gold;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 15px auto;
+      max-width: 600px;
+    }
+    input, select, button {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background: gold;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover { background: orange; }
+    .hidden { display: none; }
+    .player-list {
+      text-align: right;
+      margin-top: 10px;
+    }
+    .player-item {
+      background: #222;
+      margin: 6px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #444;
+    }
+    .danger {
+      background: crimson;
+      color: white;
+    }
+    .danger:hover {
+      background: darkred;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🕵️‍♂️ لعبة القضايا - الامبوستر</h1>
+
+  <!-- شاشة البداية -->
+  <div class="box" id="setupBox">
+    <h2>⚙️ إعداد اللعبة</h2>
+
+    <p>اكتب أسماء اللاعبين (من 5 لـ 12)</p>
+    <input type="text" id="playerName" placeholder="اسم اللاعب">
+    <button onclick="addPlayer()">➕ إضافة لاعب</button>
+
+    <div class="player-list" id="playersList"></div>
+
+    <p>اختار عدد الامبوستر:</p>
+    <select id="imposterCount">
+      <option value="1">1 امبوستر</option>
+      <option value="2">2 امبوستر</option>
+      <option value="3">3 امبوستر</option>
+    </select>
+
+    <button onclick="startGame()">🎮 ابدأ اللعبة</button>
+  </div>
+
+  <!-- شاشة توزيع الأدوار -->
+  <div class="box hidden" id="rolesBox">
+    <h2>🎭 توزيع الأدوار</h2>
+    <p id="roleText">اضغط عشان كل لاعب يشوف دوره</p>
+
+    <button onclick="showRole()">👀 عرض الدور</button>
+    <button onclick="hideRole()">🙈 إخفاء الدور</button>
+
+    <h3 id="currentPlayer"></h3>
+    <h2 id="currentRole" style="color:lime;"></h2>
+
+    <button onclick="nextPlayer()">➡️ اللاعب اللي بعده</button>
+    <button class="danger" onclick="finishRoles()">✅ خلصنا توزيع</button>
+  </div>
+
+  <!-- شاشة القضية -->
+  <div class="box hidden" id="caseBox">
+    <h2>📌 القضية</h2>
+    <h3 id="caseTitle"></h3>
+    <p id="caseStory"></p>
+
+    <button onclick="goToQuestions()">➡️ ابدأ التحقيق</button>
+  </div>
+
+  <!-- شاشة الأسئلة -->
+  <div class="box hidden" id="questionsBox">
+    <h2>❓ التحقيق</h2>
+    <h3 id="questionText"></h3>
+
+    <button onclick="nextQuestion()">➡️ السؤال اللي بعده</button>
+    <button class="danger" onclick="goToVoting()">🗳️ روح للتصويت</button>
+  </div>
+
+  <!-- شاشة التصويت -->
+  <div class="box hidden" id="votingBox">
+    <h2>🗳️ التصويت</h2>
+    <p>اختاروا الشخص اللي هيتطرد (تصويت علني)</p>
+
+    <select id="voteSelect"></select>
+    <button onclick="kickPlayer()">🚪 طرد اللاعب</button>
+
+    <h3 id="kickedText" style="color:orange;"></h3>
+
+    <button onclick="checkWin()">🏁 تحقق من الفوز</button>
+  </div>
+
+  <!-- شاشة النهاية -->
+  <div class="box hidden" id="endBox">
+    <h2>🏆 النتيجة</h2>
+    <h3 id="winnerText"></h3>
+    <button onclick="restartGame()">🔁 لعبة جديدة</button>
+  </div>
+
+  <script>
+    let players = [];
+    let alivePlayers = [];
+    let roles = {};
+    let imposterPlayers = [];
+    let currentIndex = 0;
+
+    const rolesList = [
+      "دكتور 🩺",
+      "مهندس 🛠️",
+      "محامي ⚖️",
+      "ظابط 👮",
+      "صحفي 📰",
+      "سواق 🚕",
+      "رجل أعمال 💼",
+      "طالب 🎓",
+      "ممرضة 🩹",
+      "عامل نظافة 🧹",
+      "شيف 👨‍🍳",
+      "جار 🏠",
+      "عجوز 👴",
+      "كهربائي ⚡",
+      "هاكر 💻"
+    ];
+
+    const cases = [
+      {title:"قضية تسمم", story:"الضحية اتسممت في حفلة عشا الساعة 10. كل الناس كانت موجودة في المكان."},
+      {title:"قضية سرقة", story:"في خزنة في شركة اتفتحت واتسرق منها مبلغ كبير، والكاميرات اتعطلت."},
+      {title:"قضية اختفاء", story:"طفل اختفى من قدام بيته فجأة، والجيران بيقولوا إنهم سمعوا صوت عربية."},
+      {title:"قضية قتل", story:"واحد اتقتل في شقته والباب كان مقفول من جوه، والجيران سمعوا صوت خناقة."},
+      {title:"قضية حادثة مدبرة", story:"عربية اتقلبت في طريق صحراوي، بس في شهود بيقولوا إن في عربية كانت بتطاردها."},
+      {title:"قضية خيانة", story:"في شخص اتفضح إنه بيبيع أسرار الشركة لمنافس، والرسائل اتسربت."}
+    ];
+
+    const questions = [
+      "كنت فين وقت الحادث؟",
+      "مين آخر شخص شفته قريب من الضحية؟",
+      "هل سمعت صوت غريب أو صريخ؟",
+      "هل عندك سبب يخليك تكره الضحية؟",
+      "ليه كنت موجود في المكان ده؟",
+      "هل شفت أي حد بيتصرف بطريقة مريبة؟",
+      "هل موبايلك كان مقفول أو بعيد عنك؟",
+      "إيه علاقتك بالقضية؟",
+      "هل لاحظت أي دليل مهم؟",
+      "مين أكتر شخص شاكك فيه؟"
+    ];
+
+    let currentCase = null;
+    let currentQuestionIndex = 0;
+
+    function addPlayer() {
+      const name = document.getElementById("playerName").value.trim();
+      if (!name) return alert("اكتب اسم اللاعب!");
+
+      if (players.includes(name)) return alert("الاسم ده موجود!");
+
+      if (players.length >= 12) return alert("الحد الأقصى 12 لاعب!");
+
+      players.push(name);
+      document.getElementById("playerName").value = "";
+      renderPlayers();
+    }
+
+    function renderPlayers() {
+      const list = document.getElementById("playersList");
+      list.innerHTML = "";
+      players.forEach((p, index) => {
+        list.innerHTML += `<div class="player-item">${index+1}- ${p}</div>`;
+      });
+    }
+
+    function startGame() {
+      if (players.length < 5) return alert("لازم على الأقل 5 لاعبين!");
+
+      alivePlayers = [...players];
+
+      const impCount = parseInt(document.getElementById("imposterCount").value);
+
+      if (impCount >= players.length) {
+        return alert("عدد الامبوستر لازم يكون أقل من عدد اللاعبين!");
+      }
+
+      imposterPlayers = pickRandom(players, impCount);
+
+      roles = {};
+      let shuffledRoles = shuffle([...rolesList]);
+
+      players.forEach((p) => {
+        let role = shuffledRoles.pop() || "شاهد 👤";
+        roles[p] = role;
+      });
+
+      // ضيف علامة الامبوستر
+      imposterPlayers.forEach(p => {
+        roles[p] = roles[p] + " (امبوستر 😈)";
+      });
+
+      document.getElementById("setupBox").classList.add("hidden");
+      document.getElementById("rolesBox").classList.remove("hidden");
+
+      currentIndex = 0;
+      updateRolePlayer();
+    }
+
+    function updateRolePlayer() {
+      document.getElementById("currentPlayer").innerText =
+        "اللاعب الحالي: " + players[currentIndex];
+
+      document.getElementById("currentRole").innerText = "";
+    }
+
+    function showRole() {
+      const p = players[currentIndex];
+      document.getElementById("currentRole").innerText = roles[p];
+    }
+
+    function hideRole() {
+      document.getElementById("currentRole").innerText = "";
+    }
+
+    function nextPlayer() {
+      if (currentIndex < players.length - 1) {
+        currentIndex++;
+        updateRolePlayer();
+      } else {
+        alert("خلصنا كل اللاعبين! اضغط (خلصنا توزيع)");
+      }
+    }
+
+    function finishRoles() {
+      document.getElementById("rolesBox").classList.add("hidden");
+      document.getElementById("caseBox").classList.remove("hidden");
+
+      currentCase = cases[Math.floor(Math.random() * cases.length)];
+      document.getElementById("caseTitle").innerText = currentCase.title;
+      document.getElementById("caseStory").innerText = currentCase.story;
+    }
+
+    function goToQuestions() {
+      document.getElementById("caseBox").classList.add("hidden");
+      document.getElementById("questionsBox").classList.remove("hidden");
+      currentQuestionIndex = 0;
+      document.getElementById("questionText").innerText = questions[currentQuestionIndex];
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex >= questions.length) {
+        alert("خلصت الأسئلة! روح للتصويت.");
+        return;
+      }
+      document.getElementById("questionText").innerText = questions[currentQuestionIndex];
+    }
+
+    function goToVoting() {
+      document.getElementById("questionsBox").classList.add("hidden");
+      document.getElementById("votingBox").classList.remove("hidden");
+
+      updateVoteList();
+    }
+
+    function updateVoteList() {
+      const select = document.getElementById("voteSelect");
+      select.innerHTML = "";
+
+      alivePlayers.forEach(p => {
+        select.innerHTML += `<option value="${p}">${p}</option>`;
+      });
+    }
+
+    function kickPlayer() {
+      const kicked = document.getElementById("voteSelect").value;
+
+      alivePlayers = alivePlayers.filter(p => p !== kicked);
+
+      document.getElementById("kickedText").innerText =
+        `🚪 اللاعب "${kicked}" اتطرد من القضية!`;
+
+      updateVoteList();
+    }
+
+    function checkWin() {
+      // احسب عدد الامبوستر اللي لسه عايشين
+      let aliveImposters = imposterPlayers.filter(p => alivePlayers.includes(p));
+
+      if (aliveImposters.length === 0) {
+        endGame("🎉 الأبرياء كسبوا! الامبوستر اتكشف واتطرد.");
+        return;
+      }
+
+      if (aliveImposters.length >= alivePlayers.length - aliveImposters.length) {
+        endGame("😈 الامبوستر كسبوا! فضلوا لحد النهاية.");
+        return;
+      }
+
+      alert("اللعبة لسه مستمرة! ارجعوا للأسئلة أو كملوا تحقيق.");
+      document.getElementById("votingBox").classList.add("hidden");
+      document.getElementById("questionsBox").classList.remove("hidden");
+    }
+
+    function endGame(text) {
+      document.getElementById("votingBox").classList.add("hidden");
+      document.getElementById("endBox").classList.remove("hidden");
+      document.getElementById("winnerText").innerText = text;
+    }
+
+    function restartGame() {
+      location.reload();
+    }
+
+    function pickRandom(arr, count) {
+      let copy = [...arr];
+      let picked = [];
+      for (let i = 0; i < count; i++) {
+        let index = Math.floor(Math.random() * copy.length);
+        picked.push(copy[index]);
+        copy.splice(index, 1);
+      }
+      return picked;
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+  </script>
+</body>
+</html>
