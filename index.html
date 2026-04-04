@@ -1,227 +1,643 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جنايات إياد - نسخة الشك</title>
-    <style>
-        :root { --gold: #ffd700; --red: #ff4757; --bg: #050505; --card: #111; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: white; margin: 0; padding: 15px; }
-        .container { max-width: 500px; margin: auto; background: var(--card); border-radius: 20px; padding: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h1 { color: var(--gold); text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #222; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-gold { background: linear-gradient(135deg, var(--gold), #b8860b); color: black; }
-        .btn-danger { background: var(--red); color: white; }
-        .btn-dark { background: #333; color: white; }
-        .hidden { display: none; }
-        .score-board { background: #1a1a1a; padding: 10px; border-radius: 10px; border: 1px solid var(--gold); text-align: center; margin-bottom: 15px; color: var(--gold); }
-        .case-box { background: rgba(255, 71, 87, 0.1); padding: 15px; border-radius: 15px; border: 1px solid var(--red); margin-bottom: 15px; }
-        .q-box { background: #161616; padding: 25px; border-radius: 15px; border-right: 5px solid var(--gold); text-align: center; min-height: 120px; display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1.6; }
-        .secret-alibi-box { background: #000; color: #00ffcc; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 14px; border: 1px dashed #00ffcc; line-height: 1.4; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>جنايات إياد Online</title>
+
+<style>
+:root { --gold:#ffd700; --red:#ff4757; --bg:#050505; --card:#111; }
+body { font-family:Segoe UI,Tahoma; background:var(--bg); color:white; margin:0; padding:15px; }
+.container { max-width:500px; margin:auto; background:var(--card); border-radius:20px; padding:20px; border:1px solid #333; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
+h1,h2 { text-align:center; color:var(--gold); }
+input,select { width:100%; padding:12px; margin:10px 0; border-radius:8px; border:1px solid #444; background:#222; color:white; box-sizing:border-box; }
+button { width:100%; padding:15px; margin:10px 0; border-radius:10px; border:none; font-size:16px; font-weight:bold; cursor:pointer; transition:.3s; }
+.btn-gold { background:linear-gradient(135deg,var(--gold),#b8860b); color:black; }
+.btn-danger { background:var(--red); color:white; }
+.btn-dark { background:#333; color:white; }
+.hidden { display:none; }
+.score-board { background:#1a1a1a; padding:10px; border-radius:10px; border:1px solid var(--gold); text-align:center; margin-bottom:15px; color:var(--gold); }
+.q-box { background:#161616; padding:20px; border-radius:15px; border-right:5px solid var(--gold); text-align:center; font-size:18px; line-height:1.6; }
+.secret-box { background:#000; color:#00ffcc; padding:10px; border-radius:8px; margin-top:10px; font-size:14px; border:1px dashed #00ffcc; line-height:1.4; }
+.small { font-size:13px; color:#bbb; text-align:center; }
+.playerTag { background:#333; padding:5px 12px; border-radius:20px; margin:5px; display:inline-block; border:1px solid #555; }
+.chatBox { height:150px; overflow-y:auto; background:#000; padding:10px; border-radius:10px; border:1px solid #444; text-align:right; }
+</style>
 </head>
+
 <body>
-
 <div class="container">
-    <div id="scoreArea" class="score-board">🏆 النقاط: <span id="scores">أضف لاعبين</span></div>
 
-    <div id="setup">
-        <h1>🕵️‍♂️ جنايات إياد</h1>
-        <input type="text" id="pInput" placeholder="اكتب اسم اللاعب...">
-        <button class="btn-gold" onclick="addP()">➕ إضافة لاعب</button>
-        <div id="pList" style="text-align:center; margin:10px;"></div>
-        <button class="btn-dark" style="background:white; color:black;" onclick="startGame()">🚀 ابدأ اللعبة</button>
+  <div id="scoreArea" class="score-board hidden">
+    🏆 النقاط: <span id="scores">...</span>
+  </div>
+
+  <!-- ROOM SCREEN -->
+  <div id="roomScreen">
+    <h1>🌍 جنايات إياد Online</h1>
+    <input id="nameInput" placeholder="اكتب اسمك...">
+    <input id="roomInput" placeholder="اكتب كود الروم... (لو هتدخل روم)">
+    <button class="btn-gold" onclick="createRoom()">➕ إنشاء روم</button>
+    <button class="btn-dark" onclick="joinRoom()">🔑 دخول روم</button>
+    <p id="roomMsg" class="small"></p>
+  </div>
+
+  <!-- LOBBY -->
+  <div id="lobbyScreen" class="hidden">
+    <h2>👥 اللاعبين في الروم</h2>
+    <p class="small">كود الروم: <span id="roomCodeText" style="color:var(--gold); font-weight:bold;"></span></p>
+    <div id="playersList" style="text-align:center;"></div>
+    <button class="btn-gold" onclick="startGame()" id="startBtn">🚀 ابدأ اللعبة</button>
+    <p class="small">⚠️ زر البداية يظهر فقط للهوست</p>
+  </div>
+
+  <!-- ROLE SCREEN -->
+  <div id="roleScreen" class="hidden">
+    <h2>🎭 دورك</h2>
+    <div class="q-box">
+      <p id="roleText" style="font-size:24px; font-weight:bold;">****</p>
+      <p id="jobText" style="color:var(--gold);"></p>
     </div>
 
-    <div id="roleScreen" class="hidden">
-        <h2 id="turnName" style="text-align:center;"></h2>
-        <div class="q-box">
-            <div>
-                <p id="roleText" style="font-weight:bold; font-size:24px;">****</p>
-                <p id="jobText" style="color:var(--gold);"></p>
-            </div>
-        </div>
-        <button class="btn-gold" onmousedown="reveal(true)" onmouseup="reveal(false)" ontouchstart="reveal(true)" ontouchend="reveal(false)">اضغط مطولاً لكشف هويتك 👁️</button>
-        <button class="btn-dark" onclick="nextPlayer()">التالي ➡️</button>
+    <button class="btn-gold"
+      onmousedown="reveal(true)" onmouseup="reveal(false)"
+      ontouchstart="reveal(true)" ontouchend="reveal(false)">
+      اضغط مطولاً لكشف هويتك 👁️
+    </button>
+
+    <button class="btn-dark" onclick="goToGame()">➡️ ادخل التحقيق</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="hidden">
+    <h2>🕵️ التحقيق</h2>
+    <div class="q-box" id="caseBox"></div>
+
+    <button class="btn-dark" onclick="openMap()">🗺️ دخول الخريطة</button>
+
+    <button class="btn-gold" onclick="useAbility()">🎭 استخدم قدرتك</button>
+    <div id="abilityBox" class="hidden secret-box"></div>
+
+    <!-- PUSH TO TALK -->
+    <button class="btn-gold" id="pttBtn"
+      onmousedown="pttStart()"
+      onmouseup="pttStop()"
+      ontouchstart="pttStart()"
+      ontouchend="pttStop()">
+      🎤 اضغط وتكلم (Push To Talk)
+    </button>
+
+    <button class="btn-danger" onclick="toggleMute()">🔇 ميوت / 🔊 ان ميوت</button>
+    <p id="micStatus" class="small">الميك: OFF</p>
+
+    <!-- CHAT -->
+    <div style="margin-top:15px; background:#111; border-radius:15px; padding:10px; border:1px solid #333;">
+      <h3 style="margin:5px; text-align:center; color:var(--gold);">💬 الشات</h3>
+      <div id="chatBox" class="chatBox"></div>
+      <input id="chatInput" placeholder="اكتب رسالة...">
+      <button class="btn-dark" onclick="sendChat()">📨 إرسال</button>
     </div>
 
-    <div id="gameScreen" class="hidden">
-        <div class="case-box">
-            <h3 style="margin:0; color:var(--red);">⚠️ القضية الحالية</h3>
-            <p id="caseDesc" style="margin:10px 0; font-size:15px;"></p>
-        </div>
-        <div id="qSection">
-            <p id="qCount" style="color:var(--gold); font-weight:bold;"></p>
-            <div class="q-box"><div id="qText"></div></div>
-            <div id="secretArea" style="margin-top:15px;">
-                <button class="btn-dark" id="peekBtn" onmousedown="showSecret(true)" onmouseup="showSecret(false)" ontouchstart="showSecret(true)" ontouchend="showSecret(false)">👁️ حجتك السرية (اضغط مطولاً)</button>
-                <div id="secretContent" class="hidden secret-alibi-box"></div>
-            </div>
-            <button class="btn-gold" id="nextQBtn" onclick="nextQuestion()" style="margin-top:20px;">السؤال التالي ➡️</button>
-        </div>
-        <button class="btn-danger" onclick="startVoting()">🚨 إنهاء الأسئلة والتصويت</button>
+    <button class="btn-danger" onclick="goCouncil()">🏛️ الذهاب للمجلس</button>
+  </div>
+
+  <!-- MAP -->
+  <div id="mapScreen" class="hidden">
+    <h2>🗺️ الخريطة</h2>
+    <select id="placeSelect"></select>
+    <button class="btn-gold" onclick="searchPlace()">🔍 فتش المكان</button>
+    <div id="clueBox" class="hidden secret-box"></div>
+    <button class="btn-dark" onclick="goToGame()">⬅️ رجوع</button>
+  </div>
+
+  <!-- COUNCIL -->
+  <div id="councilScreen" class="hidden">
+    <h2>🏛️ مجلس التحقيق</h2>
+    <p class="small">اختار شخص للاستجواب</p>
+    <select id="askSelect"></select>
+    <button class="btn-gold" onclick="startInterrogation()">🎤 ابدأ الاستجواب</button>
+
+    <div id="interrogationBox" class="hidden q-box" style="border-right:5px solid var(--red);">
+      <h3 id="askedName" style="color:var(--red);"></h3>
+      <p>⏳ عنده 30 ثانية للرد</p>
+      <p id="timer" style="font-size:30px; color:var(--gold); font-weight:bold;"></p>
     </div>
 
-    <div id="passScreen" class="hidden" style="text-align:center;">
-        <h2 style="margin-top:50px;">سلم الموبايل لـ:</h2>
-        <p id="voterName" style="font-size:35px; color:var(--gold); font-weight:bold;"></p>
-        <button class="btn-gold" onclick="goToVote()">أنا استلمت ✅</button>
-    </div>
+    <button class="btn-danger" onclick="goVote()">🗳️ التصويت السري</button>
+  </div>
 
-    <div id="voteScreen" class="hidden">
-        <h2 style="text-align:center;">🗳️ صوت في سرك</h2>
-        <select id="voteSelect" style="width:100%; padding:15px; border-radius:10px; background:#222; color:white; border:1px solid var(--gold);"></select>
-        <button class="btn-danger" style="margin-top:20px;" onclick="submitVote()">تأكيد الصوت 🔒</button>
-    </div>
+  <!-- VOTE -->
+  <div id="voteScreen" class="hidden">
+    <h2>🗳️ التصويت</h2>
+    <select id="voteSelect"></select>
+    <button class="btn-danger" onclick="submitVote()">🔒 تأكيد صوتي</button>
+    <p id="voteMsg" class="small"></p>
+  </div>
 
-    <div id="resultScreen" class="hidden">
-        <h2 id="finalMsg" style="text-align:center; color:var(--gold);"></h2>
-        <div style="background:#1a1a1a; padding:20px; border-radius:15px; border:1px solid var(--red); margin-top:20px;">
-            <h3 style="text-align:center; color:var(--red); margin:0;">⚖️ جلسة العقاب</h3>
-            <p id="loserText" style="text-align:center; font-weight:bold; font-size:18px; margin:15px 0;"></p>
-            <button class="btn-gold" onclick="getAIControl()">حكم عشوائي 🤖</button>
-            <div id="punishBox" class="hidden" style="margin-top:15px; border:1px dashed var(--gold); padding:10px; text-align:center; color:var(--gold);"></div>
-        </div>
-        <button class="btn-gold" style="margin-top:20px;" onclick="startGame()">جيم جديد 🔁</button>
-    </div>
+  <!-- RESULT -->
+  <div id="resultScreen" class="hidden">
+    <h2 id="finalMsg"></h2>
+    <div class="q-box" id="resultBox"></div>
+    <button class="btn-gold" onclick="restartLobby()">🔁 جيم جديد</button>
+  </div>
+
 </div>
 
-<script>
-    let players = [], points = {}, roles = {}, jobs = {}, idx = 0, qIdx = 0, votes = {};
-    const jobList = ["طبيب شرعي", "محامي الضحية", "جار مريب", "عامل نظافة", "سائق تاكسي"];
+<!-- Agora -->
+<script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
 
-    const secretAlibis = [
-        {
-            q: "كنت فين وقت وقوع الجريمة (الساعة 9 مساءً)؟",
-            innocent: "كنت في كافيه لوحدي، مش فاكر اسمه بس هو في الشارع اللي ورايا.",
-            impostor: "كنت بتمشى في المنطقة عشان كنت مخنوق شوية ومحدش شافني."
-        },
-        {
-            q: "لو فتشنا موبايلك، إيه آخر مكالمة عملتها؟",
-            innocent: "كانت مع والدتي، بس المكالمة مكملتش 10 ثواني عشان الشبكة قطعت.",
-            impostor: "مسحت سجل المكالمات الصبح عشان الموبايل كان بيهنج."
-        },
-        {
-            q: "إيه اللي كان في إيدك وأنت مروح البيت؟",
-            innocent: "كيس أسود فيه طلبات للبيت، بس مش فاكر البياع اداني باقي ولا لا.",
-            impostor: "شنطة لاب توب، وكنت لابس جوانتي عشان الجو كان برد (رغم إننا في الصيف!)."
-        },
-        {
-            q: "سمعت صوت خناقة أو ضرب نار؟",
-            innocent: "سمعت صوت عالي، بس افتكرته ماتش كورة والناس بتهيص.",
-            impostor: "مسمعتش حاجة خالص، كنت مشغل أغاني في السماعات بأعلى صوت."
-        }
-    ];
+<!-- Firebase + Game Script -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+import {
+  getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot,
+  collection, addDoc, getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 
-    function addP() {
-        let n = document.getElementById('pInput').value.trim();
-        if(n && !players.includes(n)) {
-            players.push(n); points[n] = 0;
-            document.getElementById('pInput').value = '';
-            document.getElementById('pList').innerHTML += `<span style="background:#333; padding:5px 12px; border-radius:20px; margin:5px; display:inline-block; border:1px solid #555;">${n}</span>`;
-            updateScores();
-        }
+/* 🔥 حط بيانات Firebase بتاعتك هنا */
+const firebaseConfig = {
+  apiKey: "PUT_YOUR_KEY",
+  authDomain: "PUT_YOUR_DOMAIN",
+  projectId: "PUT_YOUR_PROJECT_ID",
+  storageBucket: "PUT_YOUR_BUCKET",
+  messagingSenderId: "PUT_YOUR_SENDER",
+  appId: "PUT_YOUR_APPID"
+};
+
+const AGORA_APP_ID = "PUT_YOUR_AGORA_APP_ID";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let userId = "";
+let myName = "";
+let roomId = "";
+let isHost = false;
+
+let roomData = null;
+let myRole = "";
+let myJob = "";
+
+// AGORA
+let agoraClient = null;
+let localTrack = null;
+let joinedAgora = false;
+let muted = true;
+
+const jobList = ["طبيب شرعي","محامي الضحية","جار مريب","عامل نظافة","سائق تاكسي"];
+const mapPlaces = ["🏠 البيت","🏢 المكتب","🛣️ الشارع","🚗 العربية","🏪 محل قديم"];
+
+function showSection(id){
+  document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+
+function randomRoomCode(){
+  return Math.random().toString(36).substring(2,7).toUpperCase();
+}
+
+async function authLogin(){
+  let res = await signInAnonymously(auth);
+  userId = res.user.uid;
+}
+
+async function updateScoreUI(){
+  if(!roomData?.points) return;
+
+  let playersSnap = await getDocs(collection(db,"rooms",roomId,"players"));
+  let playersMap = {};
+  playersSnap.forEach(p => playersMap[p.id] = p.data().name);
+
+  document.getElementById("scoreArea").classList.remove("hidden");
+
+  document.getElementById("scores").innerText =
+    Object.entries(roomData.points).map(([id,p]) => `${playersMap[id]}: ${p}`).join(" | ");
+}
+
+async function joinVoice(){
+  if(joinedAgora) return;
+
+  agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+
+  agoraClient.on("user-published", async (user, mediaType) => {
+    await agoraClient.subscribe(user, mediaType);
+    if(mediaType === "audio"){
+      user.audioTrack.play();
+    }
+  });
+
+  await agoraClient.join(AGORA_APP_ID, roomId, null, userId);
+
+  localTrack = await AgoraRTC.createMicrophoneAudioTrack();
+  await agoraClient.publish([localTrack]);
+
+  await localTrack.setEnabled(false);
+  muted = true;
+
+  joinedAgora = true;
+  document.getElementById("micStatus").innerText = "🎤 الصوت متصل - ميوت 🔇";
+}
+
+window.pttStart = async function(){
+  if(!joinedAgora) await joinVoice();
+  if(localTrack){
+    await localTrack.setEnabled(true);
+    document.getElementById("micStatus").innerText = "🎤 بتتكلم الآن...";
+    muted = false;
+  }
+}
+
+window.pttStop = async function(){
+  if(localTrack){
+    await localTrack.setEnabled(false);
+    document.getElementById("micStatus").innerText = "🔇 ميوت";
+    muted = true;
+  }
+}
+
+window.toggleMute = async function(){
+  if(!joinedAgora) await joinVoice();
+  if(!localTrack) return;
+
+  if(muted){
+    await localTrack.setEnabled(true);
+    muted = false;
+    document.getElementById("micStatus").innerText = "🎤 Unmute";
+  } else {
+    await localTrack.setEnabled(false);
+    muted = true;
+    document.getElementById("micStatus").innerText = "🔇 Mute";
+  }
+}
+
+window.createRoom = async function(){
+  myName = document.getElementById("nameInput").value.trim();
+  if(!myName) return alert("اكتب اسمك");
+
+  await authLogin();
+  roomId = randomRoomCode();
+  isHost = true;
+
+  await setDoc(doc(db,"rooms",roomId),{
+    hostId:userId,
+    state:"lobby",
+    caseDesc:"",
+    roles:{},
+    jobs:{},
+    points:{},
+    clues:{},
+    votes:{},
+    votedBy:{}
+  });
+
+  await setDoc(doc(db,"rooms",roomId,"players",userId),{
+    name:myName
+  });
+
+  document.getElementById("roomMsg").innerText = "✅ تم إنشاء روم: " + roomId;
+  listenRoom();
+  showSection("lobbyScreen");
+}
+
+window.joinRoom = async function(){
+  myName = document.getElementById("nameInput").value.trim();
+  if(!myName) return alert("اكتب اسمك");
+
+  roomId = document.getElementById("roomInput").value.trim().toUpperCase();
+  if(!roomId) return alert("اكتب كود الروم");
+
+  await authLogin();
+
+  let snap = await getDoc(doc(db,"rooms",roomId));
+  if(!snap.exists()) return alert("الروم مش موجودة");
+
+  await setDoc(doc(db,"rooms",roomId,"players",userId),{
+    name:myName
+  });
+
+  isHost = false;
+  listenRoom();
+  showSection("lobbyScreen");
+}
+
+function listenRoom(){
+  document.getElementById("roomCodeText").innerText = roomId;
+
+  // ROOM LISTENER
+  onSnapshot(doc(db,"rooms",roomId), async (snap)=>{
+    roomData = snap.data();
+    if(!roomData) return;
+
+    await updateScoreUI();
+
+    let playersSnap = await getDocs(collection(db,"rooms",roomId,"players"));
+    let list = [];
+    playersSnap.forEach(p => list.push({id:p.id, ...p.data()}));
+
+    document.getElementById("playersList").innerHTML =
+      list.map(p=> `<span class="playerTag">${p.name}</span>`).join("");
+
+    document.getElementById("startBtn").style.display =
+      (roomData.hostId === userId ? "block":"none");
+
+    if(roomData.roles && roomData.roles[userId]){
+      myRole = roomData.roles[userId];
+      myJob = roomData.jobs[userId];
     }
 
-    function updateScores() {
-        document.getElementById('scores').innerText = Object.entries(points).map(([n, p]) => `${n}: ${p}`).join(" | ");
+    if(roomData.caseDesc){
+      document.getElementById("caseBox").innerText = "⚠️ القضية: " + roomData.caseDesc;
     }
 
-    function startGame() {
-        if(players.length < 3) return alert("محتاجين 3 لاعبين!");
-        idx = 0; qIdx = 0; votes = {};
-        let imp = players[Math.floor(Math.random() * players.length)];
-        players.forEach(p => {
-            roles[p] = (p === imp ? "impostor" : "innocent");
-            jobs[p] = jobList[Math.floor(Math.random() * jobList.length)];
-        });
-        document.getElementById('caseDesc').innerText = "سرقة ملفات سرية من مكتب اللواء " + players[Math.floor(Math.random()*players.length)];
-        showSection('roleScreen');
-        updateRoleUI();
+    if(roomData.state === "roles") showSection("roleScreen");
+    if(roomData.state === "game") showSection("gameScreen");
+    if(roomData.state === "map") showSection("mapScreen");
+    if(roomData.state === "council") showSection("councilScreen");
+    if(roomData.state === "vote") showSection("voteScreen");
+    if(roomData.state === "result") {
+      showSection("resultScreen");
+      showFinalResult();
     }
 
-    function reveal(show) {
-        let p = players[idx];
-        document.getElementById('roleText').innerText = show ? (roles[p] === "impostor" ? "أنت المجرم 😈" : "أنت بريء 🔍") : "****";
-        document.getElementById('jobText').innerText = show ? "وظيفتك: " + jobs[p] : "";
+    updateCouncilUI(list);
+    updateVoteUI(list);
+    updateMapUI();
+  });
+
+  // CHAT LISTENER
+  onSnapshot(collection(db,"rooms",roomId,"chat"), (snap)=>{
+    let messages = [];
+    snap.forEach(doc=>{
+      messages.push(doc.data());
+    });
+
+    messages.sort((a,b)=>a.time - b.time);
+
+    let chatBox = document.getElementById("chatBox");
+    chatBox.innerHTML = messages.map(m=>`
+      <div style="margin-bottom:6px;">
+        <b style="color:var(--gold);">${m.name}:</b>
+        <span style="color:white;">${m.text}</span>
+      </div>
+    `).join("");
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+}
+
+window.startGame = async function(){
+  if(!isHost) return alert("الهوست بس اللي يبدأ");
+
+  let playersSnap = await getDocs(collection(db,"rooms",roomId,"players"));
+  let playerIds = [];
+  let playerNames = [];
+  playersSnap.forEach(p=>{
+    playerIds.push(p.id);
+    playerNames.push(p.data().name);
+  });
+
+  if(playerIds.length < 3) return alert("لازم 3 لاعبين على الأقل");
+
+  let impId = playerIds[Math.floor(Math.random()*playerIds.length)];
+
+  let roles = {};
+  let jobs = {};
+  playerIds.forEach(id=>{
+    roles[id] = (id === impId ? "impostor" : "innocent");
+    jobs[id] = jobList[Math.floor(Math.random()*jobList.length)];
+  });
+
+  let points = {};
+  playerIds.forEach(id => points[id] = 0);
+
+  let clues = {};
+  mapPlaces.forEach(pl=>{
+    clues[pl] = [
+      "📌 بصمة غريبة على الباب",
+      "📌 ورقة ممزقة فيها رقم موبايل",
+      "📌 تسجيل كاميرا مش واضح",
+      "📌 بقعة قهوة على المكتب",
+      "📌 أثر جزمة في التراب"
+    ][Math.floor(Math.random()*5)];
+  });
+
+  let caseDesc = "سرقة ملفات سرية من مكتب اللواء " + playerNames[Math.floor(Math.random()*playerNames.length)];
+
+  await updateDoc(doc(db,"rooms",roomId),{
+    state:"roles",
+    roles, jobs,
+    caseDesc,
+    clues,
+    votes:{},
+    votedBy:{},
+    points
+  });
+}
+
+window.reveal = function(show){
+  document.getElementById("roleText").innerText =
+    show ? (myRole === "impostor" ? "أنت المجرم 😈" : "أنت بريء 🔍") : "****";
+  document.getElementById("jobText").innerText =
+    show ? ("وظيفتك: " + myJob) : "";
+}
+
+window.goToGame = async function(){
+  await updateDoc(doc(db,"rooms",roomId),{ state:"game" });
+  setTimeout(()=> joinVoice(), 500);
+}
+
+window.openMap = async function(){
+  await updateDoc(doc(db,"rooms",roomId),{ state:"map" });
+}
+
+function updateMapUI(){
+  let s = document.getElementById("placeSelect");
+  if(s.options.length === 0){
+    mapPlaces.forEach(pl=>{
+      let opt = document.createElement("option");
+      opt.value = pl; opt.innerText = pl;
+      s.appendChild(opt);
+    });
+  }
+}
+
+window.searchPlace = function(){
+  let place = document.getElementById("placeSelect").value;
+  let clue = roomData.clues[place];
+  let box = document.getElementById("clueBox");
+  box.classList.remove("hidden");
+  box.innerText = "🔎 الدليل في " + place + ":\n" + clue;
+}
+
+window.useAbility = function(){
+  let msg = "";
+
+  if(myJob === "طبيب شرعي") msg = "🧪 الطبيب الشرعي: وقت الجريمة بين 8:30 و 9:15 مساءً";
+  if(myJob === "محامي الضحية") msg = "⚖️ المحامي: الشاهد الرئيسي بيكدب في جزء من كلامه";
+  if(myJob === "جار مريب") msg = "👂 الجار: شاف حد لابس جاكيت أسود بيجري";
+  if(myJob === "عامل نظافة") msg = "🧹 عامل النظافة: لقيت ورقة مرمية جنب سلة الزبالة";
+  if(myJob === "سائق تاكسي") msg = "🚖 السائق: حد ركب معايا الساعة 9:05 وكان متوتر جدًا";
+
+  let box = document.getElementById("abilityBox");
+  box.classList.remove("hidden");
+  box.innerText = msg;
+
+  setTimeout(()=> box.classList.add("hidden"), 7000);
+}
+
+window.goCouncil = async function(){
+  await updateDoc(doc(db,"rooms",roomId),{ state:"council" });
+}
+
+function updateCouncilUI(players){
+  let s = document.getElementById("askSelect");
+  if(s.options.length === 0){
+    players.forEach(p=>{
+      let opt = document.createElement("option");
+      opt.value = p.name; opt.innerText = p.name;
+      s.appendChild(opt);
+    });
+  }
+}
+
+window.startInterrogation = function(){
+  let target = document.getElementById("askSelect").value;
+
+  document.getElementById("interrogationBox").classList.remove("hidden");
+  document.getElementById("askedName").innerText = "🎤 استجواب: " + target;
+
+  let time = 30;
+  document.getElementById("timer").innerText = time;
+
+  let interval = setInterval(()=>{
+    time--;
+    document.getElementById("timer").innerText = time;
+    if(time <= 0){
+      clearInterval(interval);
+      document.getElementById("timer").innerText = "⏱️ انتهى الوقت!";
     }
+  },1000);
+}
 
-    function nextPlayer() {
-        if(idx < players.length - 1) { idx++; updateRoleUI(); reveal(false); }
-        else { idx = 0; showSection('gameScreen'); showQuestion(); }
+window.goVote = async function(){
+  await updateDoc(doc(db,"rooms",roomId),{ state:"vote" });
+}
+
+function updateVoteUI(players){
+  let s = document.getElementById("voteSelect");
+  if(s.options.length === 0){
+    players.forEach(p=>{
+      if(p.name !== myName){
+        let opt = document.createElement("option");
+        opt.value = p.name; opt.innerText = p.name;
+        s.appendChild(opt);
+      }
+    });
+  }
+}
+
+window.submitVote = async function(){
+  if(roomData.votedBy && roomData.votedBy[userId]) {
+    document.getElementById("voteMsg").innerText = "❌ أنت صوتت قبل كده!";
+    return;
+  }
+
+  let chosen = document.getElementById("voteSelect").value;
+  let votes = roomData.votes || {};
+  votes[chosen] = (votes[chosen] || 0) + 1;
+
+  let votedBy = roomData.votedBy || {};
+  votedBy[userId] = true;
+
+  await updateDoc(doc(db,"rooms",roomId),{
+    votes, votedBy
+  });
+
+  document.getElementById("voteMsg").innerText = "✅ تم تسجيل صوتك";
+
+  let playersSnap = await getDocs(collection(db,"rooms",roomId,"players"));
+  let countPlayers = playersSnap.size;
+  let countVotes = Object.keys(votedBy).length;
+
+  if(countVotes >= countPlayers && isHost){
+    await updateDoc(doc(db,"rooms",roomId),{ state:"result" });
+  }
+}
+
+async function showFinalResult(){
+  let votes = roomData.votes || {};
+  let maxVotes = Math.max(...Object.values(votes));
+  let top = Object.keys(votes).filter(p => votes[p] === maxVotes);
+  let kickedName = top[Math.floor(Math.random()*top.length)];
+
+  let playersSnap = await getDocs(collection(db,"rooms",roomId,"players"));
+  let players = [];
+  playersSnap.forEach(p=> players.push({id:p.id, ...p.data()}));
+
+  let kickedPlayer = players.find(p=>p.name === kickedName);
+  let impId = Object.keys(roomData.roles).find(id=>roomData.roles[id] === "impostor");
+  let impPlayer = players.find(p=>p.id === impId);
+
+  let points = roomData.points || {};
+  let correct = kickedPlayer && roomData.roles[kickedPlayer.id] === "impostor";
+
+  if(correct){
+    document.getElementById("finalMsg").innerText = `✅ قبضتوا على المجرم! (${kickedName})`;
+    players.forEach(p=>{
+      if(roomData.roles[p.id] === "innocent") points[p.id] += 10;
+    });
+  } else {
+    document.getElementById("finalMsg").innerText = `❌ ظلمتوا (${kickedName})! المجرم الحقيقي هو ${impPlayer.name}`;
+    points[impId] += 20;
+  }
+
+  let loserId = Object.keys(points).reduce((a,b)=> points[a] < points[b] ? a : b);
+  let loserName = players.find(p=>p.id === loserId).name;
+
+  document.getElementById("resultBox").innerText =
+    "📌 نتيجة التصويت:\n" +
+    Object.entries(votes).map(([n,v])=>`${n}: ${v}`).join(" | ") +
+    "\n\n😈 المعاقب: " + loserName;
+
+  await updateDoc(doc(db,"rooms",roomId),{ points });
+}
+
+window.restartLobby = async function(){
+  if(!isHost) return alert("الهوست بس يعمل ريستارت");
+  await updateDoc(doc(db,"rooms",roomId),{
+    state:"lobby",
+    votes:{},
+    votedBy:{}
+  });
+  showSection("lobbyScreen");
+}
+
+window.sendChat = async function(){
+  let msg = document.getElementById("chatInput").value.trim();
+  if(!msg) return;
+
+  await addDoc(collection(db,"rooms",roomId,"chat"),{
+    name: myName,
+    text: msg,
+    time: Date.now()
+  });
+
+  document.getElementById("chatInput").value = "";
+}
+
+document.addEventListener("keydown", function(e){
+  if(e.key === "Enter"){
+    let chatInput = document.getElementById("chatInput");
+    if(chatInput && document.activeElement === chatInput){
+      sendChat();
     }
+  }
+});
 
-    function updateRoleUI() { document.getElementById('turnName').innerText = "الدور على: " + players[idx]; }
-
-    function showQuestion() {
-        document.getElementById('qCount').innerText = `السؤال ${qIdx + 1} من ${secretAlibis.length}`;
-        document.getElementById('qText').innerText = `يا ${players[idx]}، ${secretAlibis[qIdx].q}`;
-        document.getElementById('secretContent').classList.add('hidden');
-    }
-
-    function showSecret(show) {
-        let content = document.getElementById('secretContent');
-        if(show) {
-            let role = roles[players[idx]];
-            content.innerText = "💡 " + (role === "innocent" ? secretAlibis[qIdx].innocent : secretAlibis[qIdx].impostor);
-            content.classList.remove('hidden');
-        } else {
-            content.classList.add('hidden');
-        }
-    }
-
-    function nextQuestion() {
-        if(idx < players.length - 1) { idx++; } 
-        else { idx = 0; qIdx++; }
-
-        if(qIdx < secretAlibis.length) { showQuestion(); } 
-        else { document.getElementById('qSection').innerHTML = "<h2 style='color:var(--gold)'>انتهت الأسئلة! وقت المحاكمة..</h2>"; }
-    }
-
-    function startVoting() { idx = 0; showPass(); }
-    function showPass() { showSection('passScreen'); document.getElementById('voterName').innerText = players[idx]; }
-    function goToVote() {
-        showSection('voteScreen');
-        let s = document.getElementById('voteSelect'); s.innerHTML = "";
-        players.forEach(p => { if(p !== players[idx]) s.innerHTML += `<option value="${p}">${p}</option>`; });
-    }
-
-    function submitVote() {
-        let v = document.getElementById('voteSelect').value;
-        votes[v] = (votes[v] || 0) + 1;
-        if(++idx < players.length) showPass();
-        else revealFinal();
-    }
-
-    function revealFinal() {
-        showSection('resultScreen');
-        let kicked = Object.keys(votes).reduce((a, b) => votes[a] > votes[b] ? a : b);
-        let isImp = roles[kicked] === "impostor";
-        if(isImp) {
-            document.getElementById('finalMsg').innerText = `✅ برافو! المجرم كان ${kicked}`;
-            players.forEach(p => { if(roles[p] === "innocent") points[p] += 10; });
-        } else {
-            let realImp = players.find(p => roles[p] === "impostor");
-            document.getElementById('finalMsg').innerText = `❌ ${kicked} كان مظلوم! المجرم هو ${realImp}`;
-            points[realImp] += 20;
-        }
-        updateScores();
-        let loser = Object.keys(points).reduce((a, b) => points[a] < points[b] ? a : b);
-        document.getElementById('loserText').innerText = "أقل نقاط (المعاقب): " + loser;
-    }
-
-    function getAIControl() {
-        const pList = ["اشرب كوباية مية بملح", "اعمل 15 ضغط", "مثل دور شحات لمدة دقيقة", "كل فص ثوم أو ليمونة"];
-        document.getElementById('punishBox').innerText = "🔥 الحكم: " + pList[Math.floor(Math.random()*pList.length)];
-        document.getElementById('punishBox').classList.remove('hidden');
-    }
-
-    function showSection(id) {
-        document.querySelectorAll('.container > div').forEach(d => d.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-        document.getElementById('scoreArea').classList.remove('hidden');
-    }
+showSection("roomScreen");
 </script>
+
 </body>
 </html>
